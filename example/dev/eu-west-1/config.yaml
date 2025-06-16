@@ -1,0 +1,8 @@
+# Lookup table for Aurora maintenance window slots
+maintenance_window:
+  1: "wed:00:00-wed:01:00"
+  2: "wed:02:00-wed:02:00"
+  3: "wed:03:00-wed:04:00"
+  4: "wed:04:00-wed:05:00"
+
+# and other region related stuff, eg: failover region, backup schedule etc
