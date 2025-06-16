@@ -27,7 +27,7 @@ tforder -dir <start_dir> [-out <file.dot|file.svg|file.png>] [-relative-to <base
 
 ## Examples:
 `tforder -dir dev/eu-west-1/ew1a/eks -out eks.svg`
-![eks.svg](https://github.com/raffraffraff/tforder/blob/main/example/eks.svg?raw=true)
+![graph.svg](https://github.com/raffraffraff/tforder/blob/main/example/graph.svg?raw=true)
 
 `tforder -dir dev -recursive -out infra.dot`
 ```
