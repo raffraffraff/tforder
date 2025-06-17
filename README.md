@@ -1,5 +1,5 @@
 # OpenTofu stack dependency graph generation
-I follow some crazy patterns in my Terraform. One of them is the specific declaration of each deployment's dependencies, like this:
+I follow some patterns in my TF code. For example, I declare each deployment's dependencies, like this:
 
 ```
 locals {
@@ -10,9 +10,7 @@ locals {
 }
 ```
 
-My boilerplate Terraform code automatically locates the outputs from those deployments for use in the current deployment. But they are also useful for generating a dependency graph! If you use Terragrunt, you could probably modify the code to work with its dependency declarations (and maybe I'll even do that, but maybe terragrunt does that by itself? I don't know...)
-
-You can point tforder to a specific deployment, or let it recursively find all of your deployments and map out dependencies for your whole infrastructure.
+My boilerplate TF code automatically loads outputs from those stacks. As a side effect, these declarations are useful for generating a dependency graph! If you use Terragrunt, you could probably modify the code to work with its dependency declarations. You can point tforder to a specific deployment, or let it recursively find all of your deployments and map out dependencies for your whole infrastructure.
 
 # Usage:
 ```
