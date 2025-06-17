@@ -1,4 +1,4 @@
-# Terraform dependency graph generation
+# OpenTofu stack dependency graph generation
 I follow some crazy patterns in my Terraform. One of them is the specific declaration of each deployment's dependencies, like this:
 
 ```
