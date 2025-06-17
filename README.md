@@ -18,7 +18,7 @@ tforder -dir <start_dir> [-out <file.dot|file.svg|file.png>] [-relative-to <base
 ```
 
 ## Flags:
-*  `-dir`  Directory to start in (default: .)
+*  `-dir`  Directory to start in (default is the current working directory, `.`)
 *  `-out`  Output file (.dot, .svg, .png; default: tforder.dot)
 *  `-relative-to`  Base path for relative node names (default: current working directory)
 *  `-recursive`  Recursively scan all subdirectories for main.tf files
