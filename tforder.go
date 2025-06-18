@@ -45,6 +45,7 @@ func main() {
 	recursivePtr := flag.Bool("recursive", false, "Recursively scan all subdirectories for main.tf files")
 	execPtr := flag.String("execute", "", "Script or command to execute in each dependency directory (optional)")
 	maxParPtr := flag.Int("maxparallel", 2, "Maximum number of parallel executions (default 2)")
+	reversePtr := flag.Bool("reverse", false, "Reverse dependency order (for destroy operations)")
 	flag.Parse()
 
 	startDir, _ := filepath.Abs(*dirPtr)
@@ -106,8 +107,18 @@ func main() {
 		}
 	}
 
+	if *reversePtr {
+		for i := range edges {
+			edges[i].Source, edges[i].Target = edges[i].Target, edges[i].Source
+		}
+	}
+
 	if *execPtr != "" {
-		fmt.Printf("Executing '%s' in dependency order (max parallel: %d)\n", *execPtr, *maxParPtr)
+		order := "dependency order"
+		if *reversePtr {
+			order = "reverse dependency order"
+		}
+		fmt.Printf("Executing '%s' in %s (max parallel: %d)\n", *execPtr, order, *maxParPtr)
 		err := dagExec(edges, *execPtr, *maxParPtr)
 		if err != nil {
 			log.Fatalf("Execution failed: %v", err)
