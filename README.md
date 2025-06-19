@@ -56,6 +56,7 @@ digraph tforder {
 ### Deploy all stacks in eu-west-2 in dependency order with up to 3 threads
 `tforder -recursive -dir deployments/dev/eu-west-2 -execute 'tofu init && tofu apply -auto-approve' --maxparallel 3`
 
+### Destroy all stacks in eu-west-2 in dependency order with up to 3 threads
 Sometimes trying to destroy with an empty state can throw errors (if you use `for_each`, a lot). To get around that you could use a destroy script like this:
 
 ```
@@ -66,3 +67,5 @@ else
   echo "No managed resources to destroy"
 fi
 ```
+
+`tforder -recursive -reverse -dir deployments/dev/eu-west-2 -execute '/path/to/destroy.sh' --maxparallel 3`
