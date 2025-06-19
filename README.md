@@ -35,7 +35,7 @@ tforder \
 
 ## Examples:
 ### Dependency graph for a specific stack
-`tforder -dir dev/eu-west-1/ew1a/eks -out eks.svg`
+`tforder -dir example/dev/eu-west-1/ew1a/eks -out eks.svg`
 ![graph.svg](https://github.com/raffraffraff/tforder/blob/main/example/graph.svg?raw=true)
 
 ### Dependency graph of your whole infrastructure
