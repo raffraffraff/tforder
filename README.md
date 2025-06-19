@@ -39,18 +39,18 @@ tforder \
 ![graph.svg](https://github.com/raffraffraff/tforder/blob/main/example/graph.svg?raw=true)
 
 ### Dependency graph of your whole infrastructure
-`tforder -dir dev -recursive -out infra.dot`
+`tforder -dir example -recursive -out infra.dot`
 ```
 digraph tforder {
-  "dev/eu-west-1/ew1a/vpc" -> "dev/eu-west-1/ew1a/eks";
-  "dev/global/shared/apex_zones" -> "dev/eu-west-1/ew1a/vpc";
-  "dev/eu-west-1/ew1b/vpc" -> "dev/eu-west-1/ew1b/eks";
-  "dev/global/shared/apex_zones" -> "dev/eu-west-1/ew1b/vpc";
+  "example/dev/eu-west-1/ew1a/vpc" -> "example/dev/eu-west-1/ew1a/eks";
+  "example/dev/global/shared/apex_zones" -> "example/dev/eu-west-1/ew1a/vpc";
+  "example/dev/eu-west-1/ew1b/vpc" -> "example/dev/eu-west-1/ew1b/eks";
+  "example/dev/global/shared/apex_zones" -> "example/dev/eu-west-1/ew1b/vpc";
 }
 ```
 
 ### Dependency graph of your whole infrastructure, with relative dir names
-`tforder -dir dev -recursive -out infra.svg -relative-to dev`
+`tforder -dir example -recursive -out infra.svg -relative-to example/dev`
 ![infra.svg](https://github.com/raffraffraff/tforder/blob/main/example/infra.svg?raw=true)
 
 ### Deploy all stacks in eu-west-2 in dependency order with up to 3 threads
