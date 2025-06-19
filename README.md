@@ -55,9 +55,14 @@ digraph tforder {
 
 ### Deploy all stacks in eu-west-2 in dependency order with up to 3 threads
 `tforder -recursive -dir deployments/dev/eu-west-2 -execute 'tofu init && tofu apply -auto-approve' --maxparallel 3`
-if terraform show -json | jq '.. | objects | select(has("mode")) | select(.mode=="managed")' | grep -q .; then
-  echo "There are managed resources, safe to destroy"
+
+Sometimes trying to destroy with an empty state can throw errors (if you use `for_each`, a lot). To get around that you could use a destroy script like this:
+
+```
+#!/bin/bash
+if tofu show -json | jq '.. | objects | select(has("mode")) | select(.mode=="managed")' | grep -q .; then
   terraform destroy -auto-approve
 else
-  echo "No managed resources found, skipping destroy"
+  echo "No managed resources to destroy"
 fi
+```
