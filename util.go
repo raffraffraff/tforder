@@ -25,12 +25,21 @@ func escapeDotLabel(s string) string {
 	return strings.ReplaceAll(s, "\"", "\\\"")
 }
 
-// Topological sort for numbered list output
+// Topological sort for dependency ordering
 func topoSort(edges []Edge, reverse bool) ([]string, error) {
+	// If reverse is true, reverse the edges before doing the topological sort
+	sortEdges := edges
+	if reverse {
+		sortEdges = reverseEdges(edges)
+	}
+
+	// Build adjacency list and track in-degrees
 	adj := map[string][]string{}
 	inDegree := map[string]int{}
 	nodes := map[string]struct{}{}
-	for _, e := range edges {
+
+	// Add all edges to the adjacency list
+	for _, e := range sortEdges {
 		adj[e.Source] = append(adj[e.Source], e.Target)
 		inDegree[e.Target]++
 		nodes[e.Source] = struct{}{}
@@ -57,10 +66,17 @@ func topoSort(edges []Edge, reverse bool) ([]string, error) {
 	if len(order) != len(nodes) {
 		return nil, fmt.Errorf("cycle detected in dependency graph")
 	}
-	if reverse {
-		for i, j := 0, len(order)-1; i < j; i, j = i+1, j-1 {
-			order[i], order[j] = order[j], order[i]
+	return order, nil
+}
+
+// reverseEdges creates a new slice of edges with Source and Target swapped
+func reverseEdges(edges []Edge) []Edge {
+	reversed := make([]Edge, len(edges))
+	for i, e := range edges {
+		reversed[i] = Edge{
+			Source: e.Target,
+			Target: e.Source,
 		}
 	}
-	return order, nil
+	return reversed
 }

@@ -5,7 +5,14 @@ Usage:
   tforder -d <start_dir> [-o <file.{txt|.dot|.svg|.png}>] [-r] [-relative-to <base>]
 
 Flags:
-  -d, -dir           Directory to start in (default: .)
+  -d, -dir           Directory to start in (default	} else {
+		// Use execEdges which already account for any reversal due to -reverse flag
+		dotEdgeSet := make(map[[2]string]struct{})
+		for _, e := range execEdges {
+			key := [2]string{e.Source, e.Target}
+			dotEdgeSet[key] = struct{}{}
+		}
+		err = writeDotFileMap(dotEdgeSet, outFile, writeBase, pretty).)
   -o, -out           Output file (.txt, .dot, .svg, .png). If not specified, output is printed to stdout in numbered list format.
   -r, -recursive     Recursively scan all subdirectories for main.tf files
   -relative-to   Base path for relative node names (default: current working directory)
@@ -122,7 +129,12 @@ func main() {
 	}
 
 	// Calculate topological order once after edges are built
-	order, err := topoSort(edges, *reversePtr)
+	// If -reverse is true, we need to use reversed edges for all operations
+	execEdges := edges
+	if *reversePtr {
+		execEdges = reverseEdges(edges)
+	}
+	order, err := topoSort(execEdges, false) // false because we've already reversed the edges if needed
 	if err != nil {
 		log.Fatalf("Failed to sort dependencies: %v", err)
 	}
@@ -139,7 +151,9 @@ func main() {
 				return "dependency order"
 			}
 		}(), *maxParPtr)
-		err = execInOrder(order, edges, *execPtr, *maxParPtr)
+
+		// Use the execEdges which already account for any reversal
+		err = execInOrder(order, execEdges, *execPtr, *maxParPtr)
 		if err != nil {
 			log.Fatalf("Execution failed: %v", err)
 		}
@@ -173,7 +187,13 @@ func main() {
 		}
 		tmpDotPath := tmpDot.Name()
 		tmpDot.Close()
-		err = writeDotFileMap(edgeSet, tmpDotPath, writeBase, pretty)
+		// Use execEdges which already account for any reversal due to -reverse flag
+		dotEdgeSet := make(map[[2]string]struct{})
+		for _, e := range execEdges {
+			key := [2]string{e.Source, e.Target}
+			dotEdgeSet[key] = struct{}{}
+		}
+		err = writeDotFileMap(dotEdgeSet, tmpDotPath, writeBase, pretty)
 		if err != nil {
 			log.Fatalf("%v", err)
 		}
