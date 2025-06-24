@@ -139,7 +139,7 @@ func main() {
 				return "dependency order"
 			}
 		}(), *maxParPtr)
-		err = execInOrder(order, *execPtr, *maxParPtr)
+		err = execInOrder(order, edges, *execPtr, *maxParPtr)
 		if err != nil {
 			log.Fatalf("Execution failed: %v", err)
 		}
@@ -163,11 +163,7 @@ func main() {
 		}
 		fmt.Printf("Numbered list written: %s\n", outFile)
 	} else if pretty {
-		edgeSet := map[[2]string]struct{}{}
-		for i := 0; i < len(order)-1; i++ {
-			key := [2]string{order[i], order[i+1]}
-			edgeSet[key] = struct{}{}
-		}
+		// For pretty output, use the original edges, not artificial ones between adjacent nodes
 		if _, err := exec.LookPath("dot"); err != nil {
 			log.Fatalf("Error: 'dot' (Graphviz) is required to generate SVG/PNG output.")
 		}
