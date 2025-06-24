@@ -121,13 +121,25 @@ func main() {
 		}
 	}
 
+	// Calculate topological order once after edges are built
+	order, err := topoSort(edges, *reversePtr)
+	if err != nil {
+		log.Fatalf("Failed to sort dependencies: %v", err)
+	}
+
 	if *execPtr != "" {
-		order := "dependency order"
-		if *reversePtr {
-			order = "reverse dependency order"
+		fmt.Printf("Execution order (reverse=%v):\n", *reversePtr)
+		for i, n := range order {
+			fmt.Printf("%2d. %s\n", i+1, relOrBase(writeBase, n))
 		}
-		fmt.Printf("Executing '%s' in %s (max parallel: %d)\n", *execPtr, order, *maxParPtr)
-		err := dagExec(edges, *execPtr, *maxParPtr)
+		fmt.Printf("Executing '%s' in %s (max parallel: %d)\n", *execPtr, func() string {
+			if *reversePtr {
+				return "reverse dependency order"
+			} else {
+				return "dependency order"
+			}
+		}(), *maxParPtr)
+		err = execInOrder(order, *execPtr, *maxParPtr)
 		if err != nil {
 			log.Fatalf("Execution failed: %v", err)
 		}
@@ -140,17 +152,22 @@ func main() {
 	isTxt := strings.HasSuffix(outFile, ".txt") || (!strings.HasSuffix(outFile, ".dot") && !pretty)
 
 	if outFile == "" {
-		err := writeNumberedListWriter(edges, os.Stdout, writeBase, *reversePtr)
+		err := writeNumberedListWriterOrder(order, os.Stdout, writeBase)
 		if err != nil {
 			log.Fatalf("%v", err)
 		}
 	} else if isTxt {
-		err := writeNumberedList(edges, outFile, writeBase, *reversePtr)
+		err := writeNumberedListOrder(order, outFile, writeBase)
 		if err != nil {
 			log.Fatalf("%v", err)
 		}
 		fmt.Printf("Numbered list written: %s\n", outFile)
 	} else if pretty {
+		edgeSet := map[[2]string]struct{}{}
+		for i := 0; i < len(order)-1; i++ {
+			key := [2]string{order[i], order[i+1]}
+			edgeSet[key] = struct{}{}
+		}
 		if _, err := exec.LookPath("dot"); err != nil {
 			log.Fatalf("Error: 'dot' (Graphviz) is required to generate SVG/PNG output.")
 		}
@@ -180,5 +197,5 @@ func main() {
 		}
 	}
 
-	fmt.Printf("Done. Edges: %d\n", len(edgeSet))
+	//fmt.Printf("Done. Edges: %d\n", len(edgeSet))
 }

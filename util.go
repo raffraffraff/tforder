@@ -26,7 +26,7 @@ func escapeDotLabel(s string) string {
 }
 
 // Topological sort for numbered list output
-func topoSort(edges []Edge) ([]string, error) {
+func topoSort(edges []Edge, reverse bool) ([]string, error) {
 	adj := map[string][]string{}
 	inDegree := map[string]int{}
 	nodes := map[string]struct{}{}
@@ -56,6 +56,11 @@ func topoSort(edges []Edge) ([]string, error) {
 	}
 	if len(order) != len(nodes) {
 		return nil, fmt.Errorf("cycle detected in dependency graph")
+	}
+	if reverse {
+		for i, j := 0, len(order)-1; i < j; i, j = i+1, j-1 {
+			order[i], order[j] = order[j], order[i]
+		}
 	}
 	return order, nil
 }

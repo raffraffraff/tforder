@@ -8,68 +8,48 @@ import (
 	"sync"
 )
 
-// dagExec runs the given command in each directory in dependency order, honoring maxParallel
-func dagExec(edges []Edge, execCmd string, maxParallel int) error {
-	adj := map[string][]string{}
-	inDegree := map[string]int{}
-	nodes := map[string]struct{}{}
-	for _, e := range edges {
-		adj[e.Source] = append(adj[e.Source], e.Target)
-		inDegree[e.Target]++
-		nodes[e.Source] = struct{}{}
-		nodes[e.Target] = struct{}{}
-	}
-	ready := []string{}
-	for n := range nodes {
-		if inDegree[n] == 0 {
-			ready = append(ready, n)
-		}
-	}
+// execInOrder runs the given command in each directory in the provided order, honoring maxParallel
+func execInOrder(order []string, execCmd string, maxParallel int) error {
 	var wg sync.WaitGroup
 	sem := make(chan struct{}, maxParallel)
-	mu := sync.Mutex{}
-	ctx := context.Background()
-	done := map[string]struct{}{}
-	errCh := make(chan error, 1)
+	errCh := make(chan error, len(order)) // Buffer can hold all errors
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Ensure cancel is called to free resources
 
-	runNode := func(dir string) {
-		defer wg.Done()
-		sem <- struct{}{}
-		defer func() { <-sem }()
-		fmt.Printf("[tforder] Running in %s: %s\n", dir, execCmd)
-		cmd := exec.CommandContext(ctx, "/bin/sh", "-c", execCmd)
-		cmd.Dir = dir
-		out, err := cmd.CombinedOutput()
-		fmt.Printf("[%s] Output:\n%s", filepath.Base(dir), out)
-		if err != nil {
-			fmt.Printf("[%s] Error: %v\n", filepath.Base(dir), err)
-			errCh <- err
+	for _, dir := range order {
+		// If a command has already failed, don't start any new ones.
+		if ctx.Err() != nil {
+			break
 		}
-		mu.Lock()
-		done[dir] = struct{}{}
-		mu.Unlock()
-	}
 
-	// Kahn's algorithm with parallel execution
-	for len(ready) > 0 {
-		next := []string{}
-		wg.Add(len(ready))
-		for _, node := range ready {
-			go runNode(node)
-			for _, neighbor := range adj[node] {
-				inDegree[neighbor]--
-				if inDegree[neighbor] == 0 {
-					next = append(next, neighbor)
-				}
+		wg.Add(1)
+		sem <- struct{}{} // Block until a slot is available
+
+		go func(d string) {
+			defer wg.Done()
+			defer func() { <-sem }()
+
+			// Double check for cancellation before running
+			if ctx.Err() != nil {
+				return
 			}
-		}
-		ready = next
-		wg.Wait()
-		select {
-		case err := <-errCh:
-			return err
-		default:
-		}
+
+			fmt.Printf("[tforder] Running in %s: %s\n", d, execCmd)
+			cmd := exec.CommandContext(ctx, "/bin/sh", "-c", execCmd)
+			cmd.Dir = d
+			out, err := cmd.CombinedOutput()
+			fmt.Printf("[%s] Output:\n%s", filepath.Base(d), out)
+			if err != nil {
+				fmt.Printf("[%s] Error: %v\n", filepath.Base(d), err)
+				errCh <- err
+				cancel() // Cancel the context to stop other commands
+			}
+		}(dir)
 	}
-	return nil
+
+	wg.Wait()
+	close(errCh)
+
+	// Return the first error that occurred, if any.
+	return <-errCh
 }
